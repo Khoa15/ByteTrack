@@ -21,22 +21,19 @@ IMAGE_EXT = [".jpg", ".jpeg", ".webp", ".bmp", ".png"]
 def make_parser():
     parser = argparse.ArgumentParser("ByteTrack Demo!")
     parser.add_argument(
-        "demo", default="image", help="demo type, eg. image, video and webcam"
+        "demo", default="video", help="demo type, eg. image, video and webcam"
     )
     parser.add_argument("-expn", "--experiment-name", type=str, default=None)
     parser.add_argument("-n", "--name", type=str, default=None, help="model name")
-
+    parser.add_argument("-even", "--even", type=int, default=1)
     parser.add_argument(
-        #"--path", default="./datasets/mot/train/MOT17-05-FRCNN/img1", help="path to images or video"
         "--path", default="./videos/palace.mp4", help="path to images or video"
-    )
-    parser.add_argument(
-        "--output_dir", default="./YOLOX_outputs", type=str
     )
     parser.add_argument("--camid", type=int, default=0, help="webcam demo camera id")
     parser.add_argument(
         "--save_result",
         action="store_true",
+        default=True,
         help="whether to save the inference result of image/video",
     )
 
@@ -44,11 +41,11 @@ def make_parser():
     parser.add_argument(
         "-f",
         "--exp_file",
-        default=None,
+        default="exps/example/mot/yolox_s.py",
         type=str,
         help="pls input your expriment description file",
     )
-    parser.add_argument("-c", "--ckpt", default=None, type=str, help="ckpt for eval")
+    parser.add_argument("-c", "--ckpt", default="../pretrained/best_ckpt.pth", type=str, help="ckpt for eval")
     parser.add_argument(
         "--device",
         default="gpu",
@@ -242,10 +239,11 @@ def imageflow_demo(predictor, vis_folder, current_time, args):
     height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)  # float
     fps = cap.get(cv2.CAP_PROP_FPS)
     timestamp = time.strftime("%Y_%m_%d_%H_%M_%S", current_time)
-    save_folder = osp.join(vis_folder)#, timestamp)
+    ff = args.path.split("/")[-1].split("\\")
+    save_folder = osp.join(vis_folder, "\\".join(ff[:-1]))#, timestamp)
     os.makedirs(save_folder, exist_ok=True)
     if args.demo == "video":
-        save_path = osp.join(save_folder, args.path.split("/")[-1])
+        save_path = osp.join(save_folder, ff[-1])
     else:
         save_path = osp.join(save_folder, "camera.mp4")
     logger.info(f"video save_path is {save_path}")
@@ -285,9 +283,6 @@ def imageflow_demo(predictor, vis_folder, current_time, args):
                     obj = objs
                 )
                 objs = obj
-                # cv2.imshow("", online_im)
-                # cv2.waitKey(0)
-                # cv2.destroyAllWindows()
             else:
                 timer.toc()
                 online_im = img_info['raw_img']
@@ -377,4 +372,25 @@ if __name__ == "__main__":
     args = make_parser().parse_args()
     exp = get_exp(args.exp_file, args.name)
 
-    main(exp, args)
+    passed = []
+    with open("../file_passed.txt", "r") as f:
+        passed = f.read().splitlines()
+
+    i = 0
+    try:
+        for folder in os.listdir("../datasets/"):
+            folder_p = os.path.join("../datasets", folder)
+            for file in os.listdir(folder_p):
+                i += 1
+                if file in passed:
+                    continue
+                if i % args.even:
+                    continue
+                file_p = os.path.join(folder_p, file)
+                args.path = file_p
+                passed.append(file+"\n")
+                main(exp, args)
+    except:
+        print("Error")
+    with open("../file_passed.txt", "w+") as f:
+        f.write(passed[:-1])

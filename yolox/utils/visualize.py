@@ -49,7 +49,7 @@ def get_color(idx):
     return color
 
 
-def plot_tracking(image, tlwhs, obj_ids, scores=None, frame_id=0, fps=0., ids2=None):
+def plot_tracking(image, tlwhs, obj_ids, scores=None, frame_id=0, fps=0., ids2=None, obj=[]):
     im = np.ascontiguousarray(np.copy(image))
     im_h, im_w = im.shape[:2]
 
@@ -60,24 +60,62 @@ def plot_tracking(image, tlwhs, obj_ids, scores=None, frame_id=0, fps=0., ids2=N
     #line_thickness = max(1, int(image.shape[1] / 500.))
     text_scale = 2
     text_thickness = 2
-    line_thickness = 3
+    line_thickness = 1
 
     radius = max(5, int(im_w/140.))
-    cv2.putText(im, 'frame: %d fps: %.2f num: %d' % (frame_id, fps, len(tlwhs)),
-                (0, int(15 * text_scale)), cv2.FONT_HERSHEY_PLAIN, 2, (0, 0, 255), thickness=2)
-
+    # cv2.putText(im, 'frame: %d fps: %.2f num: %d' % (frame_id, fps, len(tlwhs)),
+    #             (0, int(15 * text_scale)), cv2.FONT_HERSHEY_PLAIN, 2, (0, 0, 255), thickness=2)
+    blank_img = np.zeros(im.shape, dtype=np.uint8)
+    print("len: ", len(obj))
     for i, tlwh in enumerate(tlwhs):
         x1, y1, w, h = tlwh
-        intbox = tuple(map(int, (x1, y1, x1 + w, y1 + h)))
+
         obj_id = int(obj_ids[i])
+        intbox = tuple(map(int, (x1, y1, x1 + w, y1 + h)))
+        x,y = intbox[0:2]
+        w,h = intbox[2] - x, intbox[3] - y
+
+        flag = False
+        for o in obj:
+            o_x, o_y, o_w, o_h = o["2boudingbox"]
+            # if obj_id == o["id"]:
+            #     print(i, x, y, w, h, " - ", obj_id, " . ", o["id"], o["2boudingbox"], " _ ", o["boudingbox"], " - ", o_x < x, o_y < y, o_w > x + w, o_y > y + h)
+            if o_x < x and o_y < y and o_w + o_x > x + w and o_y + o_h > y + h:
+                flag = True
+                print("ok")
+                x, y, w, h = o_x, o_y, o_w, o_h
+                break
+        if flag == False:
+            x -= int(w/2)
+            y -= int(h/8)
+
+            w *= 2
+            h += int(h/4)
+
+        
+        startPoint = (x, y)
+        endPoint = (x + w, y + h)
+
         id_text = '{}'.format(int(obj_id))
         if ids2 is not None:
             id_text = id_text + ', {}'.format(int(ids2[i]))
         color = get_color(abs(obj_id))
-        cv2.rectangle(im, intbox[0:2], intbox[2:4], color=color, thickness=line_thickness)
-        cv2.putText(im, id_text, (intbox[0], intbox[1]), cv2.FONT_HERSHEY_PLAIN, text_scale, (0, 0, 255),
-                    thickness=text_thickness)
-    return im
+        # cv2.rectangle(im, startPoint, endPoint, color=color, thickness=line_thickness)
+        # cv2.putText(im, id_text, (intbox[0], intbox[1]), cv2.FONT_HERSHEY_PLAIN, text_scale, (0, 0, 255),
+        #             thickness=text_thickness)
+        # print(x, y, w, h)
+        # x, y, w, h = 121, 110, 16, 67
+        # print(flag, obj)
+        if flag == False:
+            obj.append({
+                "id": obj_id,
+                "boudingbox": [intbox[0], intbox[1], intbox[2] - intbox[0], intbox[3] - intbox[1]],
+                "2boudingbox": [x, y, w, h]
+            })
+        blank_img[y: y+h, x : x + w] = im[y : y + h, x : x + w]
+        # for blank image
+
+    return blank_img, obj
 
 
 _COLORS = np.array(
