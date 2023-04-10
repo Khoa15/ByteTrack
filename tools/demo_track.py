@@ -285,9 +285,6 @@ def imageflow_demo(predictor, vis_folder, current_time, args):
                     obj = objs
                 )
                 objs = obj
-                # cv2.imshow("", online_im)
-                # cv2.waitKey(0)
-                # cv2.destroyAllWindows()
             else:
                 timer.toc()
                 online_im = img_info['raw_img']

@@ -66,7 +66,7 @@ def plot_tracking(image, tlwhs, obj_ids, scores=None, frame_id=0, fps=0., ids2=N
     # cv2.putText(im, 'frame: %d fps: %.2f num: %d' % (frame_id, fps, len(tlwhs)),
     #             (0, int(15 * text_scale)), cv2.FONT_HERSHEY_PLAIN, 2, (0, 0, 255), thickness=2)
     blank_img = np.zeros(im.shape, dtype=np.uint8)
-    print("len: ", len(obj))
+    # print("len: ", len(obj))
     for i, tlwh in enumerate(tlwhs):
         x1, y1, w, h = tlwh
 
@@ -82,7 +82,7 @@ def plot_tracking(image, tlwhs, obj_ids, scores=None, frame_id=0, fps=0., ids2=N
             #     print(i, x, y, w, h, " - ", obj_id, " . ", o["id"], o["2boudingbox"], " _ ", o["boudingbox"], " - ", o_x < x, o_y < y, o_w > x + w, o_y > y + h)
             if o_x < x and o_y < y and o_w + o_x > x + w and o_y + o_h > y + h:
                 flag = True
-                print("ok")
+                # print("ok")
                 x, y, w, h = o_x, o_y, o_w, o_h
                 break
         if flag == False:
