@@ -239,7 +239,8 @@ def imageflow_demo(predictor, vis_folder, current_time, args):
     height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)  # float
     fps = cap.get(cv2.CAP_PROP_FPS)
     timestamp = time.strftime("%Y_%m_%d_%H_%M_%S", current_time)
-    ff = args.path.split("/")[-1].split("\\")
+    ff = args.path.split("/")[-1]
+    ff = os.path.split(ff)
     save_folder = osp.join(vis_folder, "\\".join(ff[:-1]))#, timestamp)
     os.makedirs(save_folder, exist_ok=True)
     if args.demo == "video":
@@ -283,6 +284,9 @@ def imageflow_demo(predictor, vis_folder, current_time, args):
                     obj = objs
                 )
                 objs = obj
+                # cv2.imshow("", online_im)
+                # cv2.waitKey(0)
+                # cv2.destroyAllWindows()
             else:
                 timer.toc()
                 online_im = img_info['raw_img']
@@ -375,22 +379,25 @@ if __name__ == "__main__":
     passed = []
     with open("../file_passed.txt", "r") as f:
         passed = f.read().splitlines()
-
+    #local is 2
     i = 0
     try:
         for folder in os.listdir("../datasets/"):
+            if folder != "ma":
+                continue
             folder_p = os.path.join("../datasets", folder)
             for file in os.listdir(folder_p):
                 i += 1
-                if file in passed:
-                    continue
+                # if file in passed:
+                #     continue
                 if i % args.even:
                     continue
                 file_p = os.path.join(folder_p, file)
                 args.path = file_p
                 passed.append(file+"\n")
                 main(exp, args)
+            break
     except:
         print("Error")
     with open("../file_passed.txt", "w+") as f:
-        f.write(passed[:-1])
+        f.writelines(passed)

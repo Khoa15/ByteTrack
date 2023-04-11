@@ -17,4 +17,4 @@ class Exp(MyExp):
 
 
         
-        self.output_dir = "YOLOX_outputs\\VOFI"
+        self.output_dir = os.path.join("YOLOX_outputs", "VOFI")

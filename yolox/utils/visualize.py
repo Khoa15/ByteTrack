@@ -91,6 +91,14 @@ def plot_tracking(image, tlwhs, obj_ids, scores=None, frame_id=0, fps=0., ids2=N
 
             w *= 2
             h += int(h/4)
+            if x < 0:
+                x = 0
+            if y < 0:
+                y = 0
+            if x + w > im_w:
+                w = im_w - x
+            if y + h > im_h:
+                h = im_h - y
 
         
         startPoint = (x, y)
